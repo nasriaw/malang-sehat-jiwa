@@ -94,10 +94,11 @@ with tab1:
         score += int(ans[0])
 
     if st.button("Dapatkan Hasil & Bantuan", type="primary"):
-        # Mengatur Waktu ke Waktu Indonesia Barat (WIB) agar akurat di server mana pun
+        # 1. Mengatur Waktu ke Waktu Indonesia Barat (WIB)
         tz_wib = pytz.timezone('Asia/Jakarta')
         waktu_sekarang = datetime.datetime.now(tz_wib).strftime("%d-%m-%Y %H:%M:%S")
         
+        # 2. Menyusun data log kuesioner
         data_log = {"waktu": waktu_sekarang, "kota": kota, "usia": usia, "skor": score}
 
         st.divider()
@@ -119,12 +120,13 @@ with tab1:
             - **IGD RS terdekat**
             """)
             
-            # Mengirim data ke grup telegram
+            # 3. Memicu fungsi kirim Telegram Sinkronus
             send_telegram_alert(data_log)
             
-            # UI yang menampilkan Jam dan Lokasi yang dilaporkan ke relawan
-            st.success(f" Tim relawan kami di wilayah **{kota}** sudah diberitahu secara anonim pada jam **{waktu_sekarang} WIB**. Bantuan akan segera diarahkan ke wilayah Anda.")
+            # 4. Menampilkan teks sukses dengan variabel waktu yang benar
+            st.success(f"Tim relawan kami di wilayah **{kota}** sudah diberitahu secara anonim pada jam **{waktu_sekarang} WIB**. Bantuan akan segera diarahkan ke wilayah Anda.")
 
+        # 5. Simpan ke Google Sheet
         save_to_gsheet(data_log)
         st.caption("Data Anda disimpan anonim untuk membantu pemetaan kesehatan jiwa di Indonesia.")
 
