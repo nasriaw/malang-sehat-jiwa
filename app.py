@@ -321,7 +321,7 @@ with col_footer:
         
     with sub_c_secret:
         # Tombol transparan diletakkan di sub-kolom ujung kanan
-        if st.button(" ", key="secret_right_backdoor", help="Area Administratif"):
+        if st.button(" ", key="secret_right_backdoor"):
             st.session_state.right_button_clicks += 1
             if st.session_state.right_button_clicks >= 3 and not st.session_state.admin_mode:
                 st.rerun()
