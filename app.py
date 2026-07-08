@@ -183,7 +183,7 @@ if not st.session_state.admin_mode:
         })
     # --- TAMBAHAN BLOK INTERPRETASI, DISCLAIMER, CATATAN & SUMBER ---
     st.write("---")
-    st.markdown("### **INTERPRETASI SKOR & BATASAN**")
+    st.markdown("#### **Interpretasi Skor & Batasan**")
     st.markdown("Skor Total: 0 - 30")
     
     # Tabel Interpretasi Skor
