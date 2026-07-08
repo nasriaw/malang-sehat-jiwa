@@ -118,6 +118,7 @@ def generate_pdf_report(logs):
 if not st.session_state.admin_mode:
     loc_data = streamlit_geolocation()
     
+    # Header Aplikasi Utama
     col_logo, col_title = st.columns([1, 6])
     with col_logo:
         if os.path.exists("logo_msj.png"):
@@ -271,14 +272,14 @@ else:
         st.session_state.logo_clicks = 0
         st.rerun()
 
-# --- FOOTER DITENGAHKAN - LOGO ADALAH TOMBOL BACKDOOR (3 KETUKAN) ---
+# --- FOOTER DITENGAHKAN - LOGO DI SEBELAH KIRI TEKS (3 KETUKAN) ---
 st.write("---")
-col_f1, col_f2, col_f3 = st.columns([3, 8, 3])
+col_space_left, col_footer_content, col_space_right = st.columns([1, 12, 1])
 
-with col_f2:
-    # Manipulasi CSS untuk menyembunyikan elemen dekoratif tombol bawaan Streamlit
+with col_footer_content:
     st.markdown("""
     <style>
+    /* Reset style tombol Streamlit agar menyatu sempurna dengan Logo */
     div[data-testid="stColumn"] button {
         background-color: transparent !important;
         border: none !important;
@@ -296,39 +297,38 @@ with col_f2:
         background-color: transparent !important;
         border: none !important;
     }
-    .footer-flex-align {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
+    .footer-text-align {
+        font-size: 0.95em;
+        color: #2d3748;
+        font-family: sans-serif;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Layout horizontal internal untuk logo dan teks
-    sub_c1, sub_c2 = st.columns([1, 11])
+    # Memosisikan logo tepat di sebelah kiri baris teks pengembang
+    sub_c_logo, sub_c_text = st.columns([0.5, 9.5])
     
-    with sub_c1:
+    with sub_c_logo:
         if os.path.exists("logo_msj.png"):
-            # Tombol transparan murni membungkus gambar logo asli
+            # Tombol klik transparan di atas logo
             if st.button(" ", key="backdoor_logo_clickable"):
                 st.session_state.logo_clicks += 1
                 if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
                     st.rerun()
             
-            # Posisi tumpang tindih visual agar logo bertindak sebagai tubuh klik tombol
-            st.markdown("<div style='margin-top: -40px; text-align: center; cursor: pointer;'>", unsafe_allow_html=True)
+            # Rendering gambar logo tepat di posisi kolom sebelah kiri teks
+            st.markdown("<div style='margin-top: -38px; text-align: left;'>", unsafe_allow_html=True)
             st.image("logo_msj.png", width=42)
             st.markdown("</div>", unsafe_allow_html=True)
             
-    with sub_c2:
+    with sub_c_text:
         st.markdown("""
-        <div style='font-size: 0.95em; color: #2d3748; font-family: sans-serif; padding-top: 5px; text-align: left;'>
+        <div class='footer-text-align' style='padding-top: 5px; text-align: left;'>
             <strong>Malang Sehat Jiwa v.1.0.0</strong>, Pengembang: <strong>Ir.M Nasri AW, M.Eng.Sc, M.Kom</strong> | Dosen STIE Indonesia Malang
         </div>
         """, unsafe_allow_html=True)
 
-    # Menampilkan kolom sandi masuk jika logo diketuk 3 kali
+    # Memunculkan form input password seandainya logo diketuk 3 kali
     if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
         st.write("---")
         st.info("🔓 Portal Akses Control Room Ditemukan.")
@@ -338,4 +338,4 @@ with col_f2:
             st.success("Akses Diberikan!")
             st.rerun()
     elif st.session_state.admin_mode:
-        st.markdown("<p style='color:green; font-weight:bold; text-align:center; margin-top:5px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:green; font-weight:bold; text-align:left; margin-top:5px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
