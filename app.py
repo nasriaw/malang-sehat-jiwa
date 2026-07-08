@@ -36,7 +36,7 @@ if 'relawan_data' not in st.session_state:
         ])
 
 if 'screening_logs' not in st.session_state: st.session_state.screening_logs = []
-if 'name_clicks' not in st.session_state: st.session_state.name_clicks = 0
+if 'right_button_clicks' not in st.session_state: st.session_state.right_button_clicks = 0
 if 'admin_mode' not in st.session_state: st.session_state.admin_mode = False
 if 'submitted' not in st.session_state: st.session_state.submitted = False
 if 'last_score' not in st.session_state: st.session_state.last_score = 0
@@ -269,58 +269,65 @@ else:
             
     if st.button("🚪 Keluar Mode Admin", type="secondary"):
         st.session_state.admin_mode = False
-        st.session_state.name_clicks = 0
+        st.session_state.right_button_clicks = 0
         st.rerun()
 
-# --- FOOTER DITENGAHKAN SECARA PRESISI (NATIVE CLICK ON TEXT) ---
+# --- FOOTER DITENGAHKAN - TOMBOL TRANSPARAN DI SEBELAH KANAN ---
 st.write("---")
 col_space_l, col_footer, col_space_r = st.columns([1, 12, 1])
 
 with col_footer:
     st.markdown("""
     <style>
-    /* Styling tombol teks agar murni menyatu seperti teks biasa tanpa box/border */
-    div[data-testid="stColumn"] button[key^="click_name_backdoor"] {
+    /* Styling tombol rahasia di ujung kanan agar murni transparan tanpa border/bayangan */
+    div[data-testid="stColumn"] button[key^="secret_right_backdoor"] {
         background-color: transparent !important;
         border: none !important;
         padding: 0 !important;
         margin: 0 !important;
         box-shadow: none !important;
-        color: #2d3748 !important;
-        font-weight: bold !important;
-        font-size: 1.0em !important;
+        width: 30px !important;
+        height: 30px !important;
         cursor: pointer !important;
-        display: inline !important;
-        vertical-align: baseline !important;
     }
-    div[data-testid="stColumn"] button[key^="click_name_backdoor"]:hover {
-        color: #2e7d32 !important;
-        text-decoration: none !important;
+    div[data-testid="stColumn"] button[key^="secret_right_backdoor"]:hover {
+        background-color: transparent !important;
+    }
+    div[data-testid="stColumn"] button[key^="secret_right_backdoor"]:active {
+        background-color: transparent !important;
+    }
+    .footer-text-style {
+        font-size: 0.95em;
+        color: #2d3748;
+        font-family: sans-serif;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Menjaga struktur kolom agar Logo berada di sebelah kiri baris teks secara konsisten
-    sub_c_logo, sub_c_text = st.columns([0.5, 9.5])
+    # Memisahkan area konten utama dengan area tombol transparan di ujung kanan
+    sub_c_logo, sub_c_text, sub_c_secret = st.columns([0.5, 11.0, 0.5])
     
     with sub_c_logo:
         if os.path.exists("logo_msj.png"):
             st.image("logo_msj.png", width=42)
             
     with sub_c_text:
-        # Menggabungkan komponen tombol native Streamlit di dalam susunan sebaris kalimat teks
-        st.write("Malang Sehat Jiwa v.1.0.0, Pengembang: ")
+        # Teks nama dikembalikan murni menjadi teks statis biasa tanpa fungsi klik
+        st.markdown("""
+        <div class='footer-text-style' style='padding-top: 5px; text-align: left;'>
+            <strong>Malang Sehat Jiwa v.1.0.0</strong>, Pengembang: <strong>Ir.M Nasri AW, M.Eng.Sc, M.Kom</strong> | Dosen STIE Indonesia Malang
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Nama bertindak sebagai elemen klik native yang stabil untuk mendeteksi 3 ketukan
-        if st.button("Ir.M Nasri AW, M.Eng.Sc, M.Kom", key="click_name_backdoor"):
-            st.session_state.name_clicks += 1
-            if st.session_state.name_clicks >= 3 and not st.session_state.admin_mode:
+    with sub_c_secret:
+        # Tombol transparan diletakkan di sub-kolom ujung kanan
+        if st.button(" ", key="secret_right_backdoor", help="Area Administratif"):
+            st.session_state.right_button_clicks += 1
+            if st.session_state.right_button_clicks >= 3 and not st.session_state.admin_mode:
                 st.rerun()
-                
-        st.write(" | Dosen STIE Indonesia Malang")
 
-    # Kontrol pemicu kemunculan form kunci sandi rahasia di bawah footer
-    if st.session_state.name_clicks >= 3 and not st.session_state.admin_mode:
+    # Form pengisian password rahasia admin muncul di bawah footer jika area kanan diklik 3 kali
+    if st.session_state.right_button_clicks >= 3 and not st.session_state.admin_mode:
         st.write("---")
         st.info("🔓 Portal Akses Control Room Ditemukan.")
         password_input = st.text_input("Masukkan Kode Akses Pusat Pengendali:", type="password", key="admin_password_field")
