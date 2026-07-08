@@ -181,7 +181,20 @@ if not st.session_state.admin_mode:
             "Waktu": st.session_state.last_time, "Kota": kota_input, "Usia": usia_input,
             "Skor": total_skor, "Risiko": risiko, "Lat": user_lat, "Lon": user_lon
         })
-
+    # --- TAMBAHAN BLOK CATATAN & SUMBER REFERENSI DIBAWAH TOMBOL ---
+    st.markdown("""
+    <div style="font-size: 0.85em; color: #4a5568; margin-top: 15px; padding: 10px; background-color: #f7fafc; border-left: 3px solid #2e7d32; border-radius: 4px;">
+        <strong>Catatan:</strong> PHQ-9: <em>Patient Health Questionnaire</em>, PHQ-9 digunakan untuk mengukur tingkat keparahan gejala depresi dalam 2 minggu terakhir.<br><br>
+        <strong>Sumber:</strong>
+        <ul style="margin-top: 5px; padding-left: 20px; list-style-type: square;">
+            <li>Spitzer, R.L., Kroenke, K., & Williams, J.B.W. (1999). <em>Validation and utility of a self-report version of PRIME-MD</em>. JAMA.</li>
+            <li>Kemenkes: Pedoman P2PTM, Ditjen Pencegahan dan Pengendalian Penyakit, Kemenkes RI.</li>
+            <li>Columbia-Suicide Severity Rating Scale - C-SSRS, Columbia University.</li>
+            <li>Kemenkes: Buku Saku Pencegahan Bunuh Diri, Dit. Kesehatan Jiwa Kemenkes RI.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
     if st.session_state.submitted:
         st.write("---")
         st.markdown(f"### **Hasil Skor Anda: {st.session_state.last_score} / 30**")
