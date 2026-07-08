@@ -127,7 +127,7 @@ if not st.session_state.admin_mode:
         st.markdown("<h1 style='color: #2e7d32; margin-bottom:0px;'>💚 MALANG SEHAT JIWA v1.0</h1>", unsafe_allow_html=True)
         st.markdown("<p style='color: #718096; font-size:1.1em; margin-top:0px;'>Screening Kesehatan Jiwa Berbasis Web | Antarmuka Deteksi Dini</p>", unsafe_allow_html=True)
     
-    st.warning("⚠️ **DARURAT! Hubungi segera:** 119 ext 8 | 112 | 0811-999-5656")
+    st.warning("⚠️ **DARURAT! Hubungi segera:** 119 ext 8 | 112 | ")
     st.write("---")
     
     st.markdown("### **Check-in 3 Menit**")
