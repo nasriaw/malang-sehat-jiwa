@@ -232,18 +232,6 @@ if not st.session_state.admin_mode:
     </div>
     """, unsafe_allow_html=True)
     
-    if st.session_state.submitted:
-        st.write("---")
-        st.markdown(f"### **Hasil Skor Anda: {st.session_state.last_score} / 30**")
-        if st.session_state.last_score >= 20:
-            st.error(f"⚠️ RISIKO TINGGI TERDETEKSI. Anda tidak sendirian. Mohon segera cari bantuan.")
-        elif st.session_state.last_score >= 10:
-            st.warning(f"⚠️ RISIKO SEDANG TERDETEKSI. Disarankan untuk berkonsultasi dengan profesional.")
-        else:
-            st.success(f"🟢 RISIKO RENDAH / NORMAL")
-            
-        st.info(f"Tim relawan kami di wilayah **{kota_input}** sudah diberitahu secara anonim pada jam **{st.session_state.last_time} WIB**.")
-
 # --- PANEL CONTROL ROOM ADMIN ---
 else:
     st_autorefresh(interval=10000, key="mental_health_sync")
