@@ -1,7 +1,9 @@
 streamlit
-pandas
-folium
+streamlit-geolocation
 streamlit-folium
 streamlit-autorefresh
+folium
+pandas
 requests
 reportlab
+
