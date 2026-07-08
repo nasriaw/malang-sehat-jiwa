@@ -118,10 +118,11 @@ def generate_pdf_report(logs):
 if not st.session_state.admin_mode:
     loc_data = streamlit_geolocation()
     
-    col_logo, col_title = st.columns([1, 5])
+    # Header Aplikasi Utama
+    col_logo, col_title = st.columns([1, 6])
     with col_logo:
         if os.path.exists("logo_msj.png"):
-            st.image("logo_msj.png", width=110)
+            st.image("logo_msj.png", width=100)
     with col_title:
         st.markdown("<h1 style='color: #2e7d32; margin-bottom:0px;'>💚 MALANG SEHAT JIWA v1.0</h1>", unsafe_allow_html=True)
         st.markdown("<p style='color: #718096; font-size:1.1em; margin-top:0px;'>Screening Kesehatan Jiwa Berbasis Web | Antarmuka Deteksi Dini</p>", unsafe_allow_html=True)
@@ -148,6 +149,7 @@ if not st.session_state.admin_mode:
     opsi = {0: "0 - Tidak sama sekali", 1: "1 - Beberapa hari", 2: "2 - >7 hari", 3: "3 - Hampir setiap hari"}
     total_skor = 0
     
+    # Struktur Pertanyaan Menyamping Horizontal
     for idx, q in enumerate(pertanyaan):
         st.markdown(f"**{q}**")
         pilihan = st.radio(
@@ -271,68 +273,25 @@ else:
         st.session_state.logo_clicks = 0
         st.rerun()
 
-# --- FOOTER DITENGAHKAN DENGAN LOGO SEBAGAI TOMBOL ADMIN (3 KETUKAN) ---
+# --- FOOTER DITENGAHKAN SECARA RAPI ---
 st.write("---")
-col_c1, col_c2, col_c3 = st.columns([2, 8, 2])
+col_f1, col_f2, col_f3 = st.columns([4, 6, 4])
 
-with col_c2:
+with col_f2:
     st.markdown("""
     <style>
-    .footer-layout {
+    .footer-wrapper {
         display: flex;
         align-items: center;
         justify-content: center;
-        text-align: center;
-        gap: 15px;
+        gap: 12px;
         width: 100%;
     }
-    .footer-text-style {
-        font-size: 1.0em;
+    .footer-text-content {
+        font-size: 0.95em;
         color: #2d3748;
         font-family: sans-serif;
-        line-height: 1.5;
+        text-align: left;
     }
-    /* Menghilangkan styling default tombol Streamlit agar menyatu dengan Logo */
-    div.stButton > button[key^="logo_backdoor_button"] {
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # Grid Kolom Internal Footer agar sejajar presisi di tengah
-    f_col_logo, f_col_text = st.columns([1, 9])
-    
-    with f_col_logo:
-        if os.path.exists("logo_msj.png"):
-            # Gambar logo dikemas di dalam komponen tombol interaktif untuk melacak ketukan
-            if st.button(" ", key="logo_backdoor_button", help="Klik 3x untuk Verifikasi Otentikasi Admin"):
-                st.session_state.logo_clicks += 1
-                if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
-                    st.rerun()
-            
-            # Memposisikan Logo di atas tombol transparan agar bertindak sebagai background murni
-            st.markdown("<div style='margin-top: -45px; text-align: center;'>", unsafe_allow_html=True)
-            st.image("logo_msj.png", width=48)
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-    with f_col_text:
-        st.markdown("""
-        <div class='footer-text-style' style='text-align: left; padding-top: 5px;'>
-            <strong>Malang Sehat Jiwa v.1.0.0</strong>, Pengembang: <strong>Ir.M Nasri AW, M.Eng.Sc, M.Kom</strong> | Dosen STIE Indonesia Malang
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Memunculkan form input password admin jika ketukan logo mencapai batas 3x
-    if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
-        st.write("---")
-        st.info("🔓 Portal Akses Control Room Ditemukan.")
-        password_input = st.text_input("Masukkan Kode Akses Pusat Pengendali:", type="password", key="admin_password_field")
-        if password_input == "sahabat123":
-            st.session_state.admin_mode = True
-            st.success("Akses Diberikan!")
-            st.rerun()
-    elif st.session_state.admin_mode:
-        st.markdown("<p style='color:green; font-weight:bold; text-align:center; margin-top:5px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
+    /* Sembunyikan border bawaan tombol agar murni menjadi gambar logo klik */
+    div.stButton > button
