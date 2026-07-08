@@ -15,7 +15,7 @@ from reportlab.lib import colors
 import datetime
 
 st.set_page_config(
-    page_title="Sahabat Jiwa v1.0 - Deteksi Dini Kesehatan Mental",
+    page_title="MALANG SEHAT JIWA v1.0 - Deteksi Dini Kesehatan Mental",
     page_icon="💚",
     layout="wide"
 )
@@ -59,7 +59,7 @@ def send_telegram_alert(kota, skor, tingkat_risiko, lat, lon):
         lokasi_str = "GPS Tidak Diizinkan Pengguna"
 
     pesan = (
-        "💚 *NOTIFIKASI SAHABAT JIWA v1.0* 💚\n\n"
+        "💚 *NOTIFIKASI MALANG SEHAT JIWA v1.0* 💚\n\n"
         f"📅 *Waktu:* {timestamp} WIB\n"
         f"📍 *Wilayah Otoritas:* {kota}\n"
         f"📊 *Skor PHQ-9+:* {skor} / 30\n"
@@ -80,11 +80,10 @@ def generate_pdf_report(logs):
     story = []
     styles = getSampleStyleSheet()
     
-    # Custom Style
     title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=16, textColor=colors.HexColor('#2e7d32'), spaceAfter=12)
     normal_style = styles['Normal']
     
-    story.append(Paragraph("LAPORAN DATA AGREGAT SKRENING - SAHABAT JIWA v1.0", title_style))
+    story.append(Paragraph("LAPORAN DATA AGREGAT SKRENING - MALANG SEHAT JIWA", title_style))
     waktu_cetak = ambil_waktu_wib().strftime("%Y-%m-%d %H:%M:%S")
     story.append(Paragraph(f"Dicetak pada: {waktu_cetak} WIB (Data bersifat Anonim)", normal_style))
     story.append(Spacer(1, 15))
@@ -115,52 +114,29 @@ def generate_pdf_report(logs):
     buffer.seek(0)
     return buffer
 
-# --- SIDEBAR ADMIN ---
-with st.sidebar:
-    st.markdown("<h2 style='text-align: center; color: #2e7d32;'>💚 SAHABAT JIWA</h2>", unsafe_allow_html=True)
-    
-    if st.button("🛡️ Verifikasi Otentikasi Sistem", use_container_width=True):
-        st.session_state.logo_clicks += 1
-        
-    if st.session_state.logo_clicks > 0:
-        if st.button("⬅️ Kembali ke Menu Utama", use_container_width=True):
-            st.session_state.logo_clicks = 0
-            st.session_state.admin_mode = False
-            st.rerun()
-            
-    if st.session_state.logo_clicks >= 3:
-        st.info("🔓 Portal Akses Terkunci Ditemukan.")
-        password_input = st.text_input("Kode Akses Kontrol Room:", type="password")
-        if password_input == "sahabat123":
-            st.session_state.admin_mode = True
-            st.success("Mode Pusat Kendali Aktif!")
-            
-    if st.session_state.admin_mode:
-        st.write("---")
-        admin_nav = st.radio("Menu Pemantauan:", ["📋 Live Log Skrening", "📊 Database Relawan", "🗺️ Sebaran Geografis", "📄 Export Dokumen"])
-        if st.button("🚪 Keluar Mode Admin"):
-            st.session_state.admin_mode = False
-            st.session_state.logo_clicks = 0
-            st.rerun()
-
-    st.write("---")
-    st.markdown("<div style='font-size: 0.85em; color: #2d3748;'><strong>Pengembang Utama:</strong><br>Ir. M Nasri AW, M.Eng.Sc, M.Kom</div>", unsafe_allow_html=True)
-
-# --- PANEL UTAMA PENGGUNA ---
+# --- PANEL UTAMA INTERFASE PENGGUNA ---
 if not st.session_state.admin_mode:
     loc_data = streamlit_geolocation()
     
-    st.markdown("<h1 style='color: #2e7d32; margin-bottom:0px;'>💚 SAHABAT JIWA v1.0</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #718096; font-size:1.1em; margin-top:0px;'>Screening Kesehatan Jiwa Berbasis Web</p>", unsafe_allow_html=True)
-    st.warning("⚠️ **DARURAT! Hubungi segera:** 119 ext 8 | 112 | 0811-999-5656")
+    # Header Logo dan Judul Aplikasi Baru
+    col_logo, col_title = st.columns([1, 5])
+    with col_logo:
+        if os.path.exists("logo_msj.png"):
+            st.image("logo_msj.png", width=120)
+    with col_title:
+        st.markdown("<h1 style='color: #2e7d32; margin-bottom:0px;'>💚 MALANG SEHAT JIWA v1.0</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #718096; font-size:1.1em; margin-top:0px;'>Screening Kesehatan Jiwa Berbasis Web | Antarmuka Deteksi Dini</p>", unsafe_allow_html=True)
     
+    st.warning("⚠️ **DARURAT! Hubungi segera:** 119 ext 8 | 112 | 0811-999-5656")
     st.write("---")
+    
     st.markdown("### **Check-in 3 Menit**")
     kota_input = st.text_input("Kota/Kabupaten Lokasi Anda Saat Ini", value="Malang")
     usia_input = st.slider("Usia", min_value=10, max_value=100, value=20)
     
     st.write("---")
-    st.markdown("### **PHQ-9+ Screening Risiko**")
+    st.markdown("### **Isi Screening Risiko**")
+    st.markdown("<p style='font-style: italic; color: #4a5568;'>Seberapa sering dalam 2 minggu terakhir Anda merasakan hal-hal berikut?</p>", unsafe_allow_html=True)
     
     pertanyaan = [
         "1. Minat melakukan sesuatu menurun", "2. Merasa sedih, murung, atau putus asa",
@@ -173,10 +149,19 @@ if not st.session_state.admin_mode:
     opsi = {0: "0 - Tidak sama sekali", 1: "1 - Beberapa hari", 2: "2 - >7 hari", 3: "3 - Hampir setiap hari"}
     total_skor = 0
     
+    # Render Pertanyaan dengan Radio Button Menyamping (Horizontal)
     for idx, q in enumerate(pertanyaan):
         st.markdown(f"**{q}**")
-        pilihan = st.radio(f"Pilih opsi {idx+1}", options=[0, 1, 2, 3], format_func=lambda x: opsi[x], key=f"q_{idx}", label_visibility="collapsed")
+        pilihan = st.radio(
+            f"Pilih opsi {idx+1}", 
+            options=[0, 1, 2, 3], 
+            format_func=lambda x: opsi[x], 
+            key=f"q_{idx}", 
+            label_visibility="collapsed",
+            horizontal=True
+        )
         total_skor += pilihan
+        st.write("")
 
     if st.button("Dapatkan Hasil & Bantuan", type="primary"):
         st.session_state.submitted = True
@@ -204,7 +189,7 @@ if not st.session_state.admin_mode:
         if st.session_state.last_score >= 20:
             st.error(f"⚠️ RISIKO TINGGI TERDETEKSI. Anda tidak sendirian. Mohon segera cari bantuan.")
         elif st.session_state.last_score >= 10:
-            st.warning(f"⚠️ RISIKO SEDANG TERDETEKSI. Disarankan untuk berkonsultasi.")
+            st.warning(f"⚠️ RISIKO SEDANG TERDETEKSI. Disarankan untuk berkonsultasi dengan profesional.")
         else:
             st.success(f"🟢 RISIKO RENDAH / NORMAL")
             
@@ -214,6 +199,9 @@ if not st.session_state.admin_mode:
 else:
     st_autorefresh(interval=10000, key="mental_health_sync")
     st.markdown("<h1>💻 Control Room Pemantauan Wilayah</h1>", unsafe_allow_html=True)
+    
+    admin_nav = st.radio("Menu Pemantauan Admin:", ["📋 Live Log Skrening", "📊 Database Relawan", "🗺️ Sebaran Geografis", "📄 Export Dokumen"], horizontal=True)
+    st.write("---")
     
     if admin_nav == "📋 Live Log Skrening":
         st.subheader("Daftar Masuk Log Respon Anonim (Termasuk Koordinat Pelapor)")
@@ -274,10 +262,45 @@ else:
                 st.download_button(
                     label="📥 Unduh Berkas Rekapitulasi PDF", 
                     data=pdf_file, 
-                    file_name="Rekap_Sahabat_Jiwa.pdf", 
+                    file_name="Rekap_Malang_Sehat_Jiwa.pdf", 
                     mime="application/pdf"
                 )
             except Exception as e:
                 st.error(f"Gagal memproses ekspor PDF: {str(e)}")
         else:
             st.warning("Tidak ada log riwayat skrening untuk dicetak.")
+            
+    if st.button("🚪 Keluar Mode Admin", type="secondary"):
+        st.session_state.admin_mode = False
+        st.session_state.logo_clicks = 0
+        st.rerun()
+
+# --- FOOTER DAN BACKDOOR ADMIN KETUKAN LOGO ---
+st.write("---")
+col_f1, col_f2, col_f3 = st.columns([4, 1, 4])
+
+with col_f1:
+    st.markdown("""
+    <div style='font-size: 0.85em; color: #2d3748; line-height: 1.4; font-family: sans-serif; padding-top: 10px;'>
+        <strong style='font-size: 1em; color: #2e7d32;'>🏢 TIM Pengabdian Masyarakat STIEIMA 2026</strong><br>
+        <strong>Arsitek & Pengembang Utama:</strong> Ir. M Nasri AW, M.Eng.Sc, M.Kom
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_f2:
+    # Trigger Backdoor Tersembunyi: Klik 3 kali pada logo kecil di bawah ini
+    if st.button("🔒", key="backdoor_trigger", help="Verifikasi Otentikasi Sistem", use_container_width=True):
+        st.session_state.logo_clicks += 1
+        if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
+            st.rerun()
+
+with col_f3:
+    if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
+        st.info("🔓 Portal Kontrol Room Terbuka.")
+        password_input = st.text_input("Masukkan Kode Akses Pusat:", type="password", key="p_input")
+        if password_input == "sahabat123":
+            st.session_state.admin_mode = True
+            st.success("Akses Diberikan!")
+            st.rerun()
+    elif st.session_state.admin_mode:
+        st.markdown("<p style='color:green; font-weight:bold; text-align:right; padding-top:10px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
