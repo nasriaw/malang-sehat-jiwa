@@ -6,6 +6,7 @@ from streamlit_geolocation import streamlit_geolocation
 from streamlit_autorefresh import st_autorefresh
 import requests
 import os
+import base64
 import math
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
@@ -118,7 +119,6 @@ def generate_pdf_report(logs):
 if not st.session_state.admin_mode:
     loc_data = streamlit_geolocation()
     
-    # Header Aplikasi Utama
     col_logo, col_title = st.columns([1, 6])
     with col_logo:
         if os.path.exists("logo_msj.png"):
@@ -272,70 +272,45 @@ else:
         st.session_state.logo_clicks = 0
         st.rerun()
 
-# --- FOOTER DITENGAHKAN - LOGO DI SEBELAH KIRI TEKS (3 KETUKAN) ---
+# --- FOOTER SEJAJAR SEBELAH KIRI DENGAN BACKDOOR KLIK 3X LOGO ---
 st.write("---")
-col_space_left, col_footer_content, col_space_right = st.columns([1, 12, 1])
 
-with col_footer_content:
-    st.markdown("""
-    <style>
-    /* Reset style tombol Streamlit agar menyatu sempurna dengan Logo */
-    div[data-testid="stColumn"] button {
-        background-color: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-shadow: none !important;
-        width: auto !important;
-        height: auto !important;
-    }
-    div[data-testid="stColumn"] button:hover {
-        background-color: transparent !important;
-        border: none !important;
-    }
-    div[data-testid="stColumn"] button:active {
-        background-color: transparent !important;
-        border: none !important;
-    }
-    .footer-text-align {
-        font-size: 0.95em;
-        color: #2d3748;
-        font-family: sans-serif;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+def get_base64_logo():
+    if os.path.exists("logo_msj.png"):
+        with open("logo_msj.png", "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode()
+    return ""
 
-    # Memosisikan logo tepat di sebelah kiri baris teks pengembang
-    sub_c_logo, sub_c_text = st.columns([0.5, 9.5])
-    
-    with sub_c_logo:
-        if os.path.exists("logo_msj.png"):
-            # Tombol klik transparan di atas logo
-            if st.button(" ", key="backdoor_logo_clickable"):
-                st.session_state.logo_clicks += 1
-                if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
-                    st.rerun()
-            
-            # Rendering gambar logo tepat di posisi kolom sebelah kiri teks
-            st.markdown("<div style='margin-top: -38px; text-align: left;'>", unsafe_allow_html=True)
-            st.image("logo_msj.png", width=42)
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-    with sub_c_text:
-        st.markdown("""
-        <div class='footer-text-align' style='padding-top: 5px; text-align: left;'>
-            <strong>Malang Sehat Jiwa v.1.0.0</strong>, Pengembang: <strong>Ir.M Nasri AW, M.Eng.Sc, M.Kom</strong> | Dosen STIE Indonesia Malang
-        </div>
-        """, unsafe_allow_html=True)
+logo_b64 = get_base64_logo()
 
-    # Memunculkan form input password seandainya logo diketuk 3 kali
-    if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
-        st.write("---")
-        st.info("🔓 Portal Akses Control Room Ditemukan.")
-        password_input = st.text_input("Masukkan Kode Akses Pusat Pengendali:", type="password", key="admin_password_field")
-        if password_input == "sahabat123":
-            st.session_state.admin_mode = True
-            st.success("Akses Diberikan!")
-            st.rerun()
-    elif st.session_state.admin_mode:
-        st.markdown("<p style='color:green; font-weight:bold; text-align:left; margin-top:5px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
+# Pengecekan pemicu klik via query param Streamlit
+query_params = st.query_params
+if "trigger_admin" in query_params:
+    st.session_state.logo_clicks += 1
+    st.query_params.clear()
+    st.rerun()
+
+footer_html = f"""
+<div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px;">
+    <a href="?trigger_admin=true" target="_self" style="text-decoration: none; cursor: pointer;">
+        <img src="data:image/png;base64,{logo_b64}" style="width: 42px; height: auto; display: block;" title="Klik 3x untuk Akses Control Room">
+    </a>
+    <div style="font-size: 0.95em; color: #2d3748; font-family: sans-serif; line-height: 1.4;">
+        <strong>Malang Sehat Jiwa v.1.0.0</strong>, Pengembang: <strong>Ir.M Nasri AW, M.Eng.Sc, M.Kom</strong> | Dosen STIE Indonesia Malang
+    </div>
+</div>
+"""
+
+st.markdown(footer_html, unsafe_allow_html=True)
+
+# Form input password admin jika logo diketuk 3 kali
+if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
+    st.write("---")
+    st.info("🔓 Portal Akses Control Room Ditemukan.")
+    password_input = st.text_input("Masukkan Kode Akses Pusat Pengendali:", type="password", key="admin_password_field")
+    if password_input == "sahabat123":
+        st.session_state.admin_mode = True
+        st.success("Akses Diberikan!")
+        st.rerun()
+elif st.session_state.admin_mode:
+    st.markdown("<p style='color:green; font-weight:bold; text-align:center; margin-top:10px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
