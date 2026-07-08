@@ -119,9 +119,11 @@ with tab1:
             - **IGD RS terdekat**
             """)
             
-            # Memanggil fungsi kirim telegram secara langsung tanpa asyncio.run()
+            # Mengirim data ke grup telegram
             send_telegram_alert(data_log)
-            st.success("Tim relawan kami sudah diberitahu secara anonim. Bantuan akan segera diarahkan ke wilayah Anda.")
+            
+            # UI yang menampilkan Jam dan Lokasi yang dilaporkan ke relawan
+            st.success(f" Tim relawan kami di wilayah **{kota}** sudah diberitahu secara anonim pada jam **{waktu_sekarang} WIB**. Bantuan akan segera diarahkan ke wilayah Anda.")
 
         save_to_gsheet(data_log)
         st.caption("Data Anda disimpan anonim untuk membantu pemetaan kesehatan jiwa di Indonesia.")
