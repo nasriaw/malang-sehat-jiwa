@@ -162,7 +162,7 @@ if not st.session_state.admin_mode:
         total_skor += pilihan
         st.write("")
 
-    if st.button("Dapatkan Hasil & Bantuan", type="primary"):
+    if st.button("DAPATKAN HASIL & BANTUAN", type="primary"):
         st.session_state.submitted = True
         st.session_state.last_score = total_skor
         st.session_state.last_time = ambil_waktu_wib().strftime("%d-%m-%Y %H:%M:%S")
