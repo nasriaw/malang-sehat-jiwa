@@ -114,15 +114,15 @@ def generate_pdf_report(logs):
     buffer.seek(0)
     return buffer
 
-# --- PANEL UTAMA INTERFASE PENGGUNA ---
+# --- PANEL UTAMA INTERFAS PENGGUNA ---
 if not st.session_state.admin_mode:
     loc_data = streamlit_geolocation()
     
-    # Header Logo dan Judul Aplikasi Baru
+    # Header Utama Aplikasi
     col_logo, col_title = st.columns([1, 5])
     with col_logo:
         if os.path.exists("logo_msj.png"):
-            st.image("logo_msj.png", width=120)
+            st.image("logo_msj.png", width=110)
     with col_title:
         st.markdown("<h1 style='color: #2e7d32; margin-bottom:0px;'>💚 MALANG SEHAT JIWA v1.0</h1>", unsafe_allow_html=True)
         st.markdown("<p style='color: #718096; font-size:1.1em; margin-top:0px;'>Screening Kesehatan Jiwa Berbasis Web | Antarmuka Deteksi Dini</p>", unsafe_allow_html=True)
@@ -149,7 +149,6 @@ if not st.session_state.admin_mode:
     opsi = {0: "0 - Tidak sama sekali", 1: "1 - Beberapa hari", 2: "2 - >7 hari", 3: "3 - Hampir setiap hari"}
     total_skor = 0
     
-    # Render Pertanyaan dengan Radio Button Menyamping (Horizontal)
     for idx, q in enumerate(pertanyaan):
         st.markdown(f"**{q}**")
         pilihan = st.radio(
@@ -233,7 +232,6 @@ else:
         st.subheader("Peta Pemetaan Pelapor & Lokasi Relawan Aktif")
         m_admin = folium.Map(location=[BASE_LAT, BASE_LON], zoom_start=13)
         
-        # Plot data Relawan (Warna Hijau)
         for _, r in st.session_state.relawan_data.iterrows():
             if r["Status"] == "Aktif":
                 folium.Marker(
@@ -242,7 +240,6 @@ else:
                     icon=folium.Icon(color='green', icon='user', prefix='fa')
                 ).add_to(m_admin)
             
-        # Plot data Pelapor dari Log Screening (Warna Merah/Oranye)
         for log in st.session_state.screening_logs:
             if log.get("Lat") is not None and log.get("Lon") is not None:
                 color_m = 'red' if log['Skor'] >= 20 else 'orange'
@@ -275,32 +272,41 @@ else:
         st.session_state.logo_clicks = 0
         st.rerun()
 
-# --- FOOTER DAN BACKDOOR ADMIN KETUKAN LOGO ---
+# --- FOOTER DAN BACKDOOR KETUKAN LOGO ---
 st.write("---")
-col_f1, col_f2, col_f3 = st.columns([4, 1, 4])
+col_f1, col_f2 = st.columns([1, 10])
 
 with col_f1:
-    st.markdown("""
-    <div style='font-size: 0.85em; color: #2d3748; line-height: 1.4; font-family: sans-serif; padding-top: 10px;'>
-        <strong style='font-size: 1em; color: #2e7d32;'>🏢 TIM Pengabdian Masyarakat STIEIMA 2026</strong><br>
-        <strong>Arsitek & Pengembang Utama:</strong> Ir. M Nasri AW, M.Eng.Sc, M.Kom
-    </div>
-    """, unsafe_allow_html=True)
+    # Trigger Tersembunyi: Tombol logo transparan tanpa border untuk mendeteksi 3 ketukan
+    if os.path.exists("logo_msj.png"):
+        if st.button(" ", key="backdoor_logo_trigger", help="Verifikasi Otentikasi", use_container_width=True):
+            st.session_state.logo_clicks += 1
+            if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
+                st.rerun()
+        # Mengganti tampilan tombol default agar tampak murni seperti gambar logo biasa
+        st.markdown(
+            f"<div style='margin-top: -45px; pointer-events: none; text-align: center;'>"
+            f"<img src='data:image/png;base64,' style='display:none;'>"
+            f"</div>", 
+            unsafe_allow_html=True
+        )
+        st.image("logo_msj.png", width=45)
 
 with col_f2:
-    # Trigger Backdoor Tersembunyi: Klik 3 kali pada logo kecil di bawah ini
-    if st.button("🔒", key="backdoor_trigger", help="Verifikasi Otentikasi Sistem", use_container_width=True):
-        st.session_state.logo_clicks += 1
-        if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
-            st.rerun()
-
-with col_f3:
+    st.markdown("""
+    <div style='font-size: 0.9em; color: #2d3748; line-height: 1.6; font-family: sans-serif; padding-top: 5px;'>
+        <strong>Malang Sehat Jiwa v.1.0.0</strong>, Pengembang: <strong>Ir.M Nasri AW, M.Eng.Sc, M.Kom</strong> | Dosen STIE Indonesia Malang
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Input kode keamanan admin muncul jika logo di sebelah kiri diketuk 3 kali
     if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
-        st.info("🔓 Portal Kontrol Room Terbuka.")
-        password_input = st.text_input("Masukkan Kode Akses Pusat:", type="password", key="p_input")
+        st.write("---")
+        st.info("🔓 Portal Akses Control Room Ditemukan.")
+        password_input = st.text_input("Masukkan Kode Akses Pusat Pengendali:", type="password", key="admin_password_field")
         if password_input == "sahabat123":
             st.session_state.admin_mode = True
             st.success("Akses Diberikan!")
             st.rerun()
     elif st.session_state.admin_mode:
-        st.markdown("<p style='color:green; font-weight:bold; text-align:right; padding-top:10px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:green; font-weight:bold; margin-top:5px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
