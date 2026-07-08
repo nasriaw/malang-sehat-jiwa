@@ -162,7 +162,7 @@ if not st.session_state.admin_mode:
         total_skor += pilihan
         st.write("")
 
-    if st.button("DAPATKAN HASIL & BANTUAN", type="primary"):
+    if st.button("Dapatkan Hasil & Bantuan", type="primary"):
         st.session_state.submitted = True
         st.session_state.last_score = total_skor
         st.session_state.last_time = ambil_waktu_wib().strftime("%d-%m-%Y %H:%M:%S")
@@ -181,9 +181,23 @@ if not st.session_state.admin_mode:
             "Waktu": st.session_state.last_time, "Kota": kota_input, "Usia": usia_input,
             "Skor": total_skor, "Risiko": risiko, "Lat": user_lat, "Lon": user_lon
         })
-    # --- TAMBAHAN BLOK INTERPRETASI, DISCLAIMER, CATATAN & SUMBER ---
+
+    # --- 1. BLOK HASIL SKOR (DIPINDAH KE ATAS SINI) ---
+    if st.session_state.submitted:
+        st.write("---")
+        st.markdown(f"### **Hasil Skor Anda: {st.session_state.last_score} / 30**")
+        if st.session_state.last_score >= 20:
+            st.error(f"⚠️ RISIKO TINGGI TERDETEKSI. Anda tidak sendirian. Mohon segera cari bantuan.")
+        elif st.session_state.last_score >= 10:
+            st.warning(f"⚠️ RISIKO SEDANG TERDETEKSI. Disarankan untuk berkonsultasi dengan profesional.")
+        else:
+            st.success(f"🟢 RISIKO RENDAH / NORMAL")
+            
+        st.info(f"Tim relawan kami di wilayah **{kota_input}** sudah diberitahu secara anonim pada jam **{st.session_state.last_time} WIB**.")
+
+    # --- 2. BLOK INTERPRETASI, DISCLAIMER, CATATAN & SUMBER (DI BAWAH HASIL) ---
     st.write("---")
-    st.markdown("#### **Interpretasi Skor & Batasan**")
+    st.markdown("#### INTERPRETASI SKOR & BATASAN")
     st.markdown("Skor Total: 0 - 30")
     
     # Tabel Interpretasi Skor
