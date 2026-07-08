@@ -162,7 +162,7 @@ if not st.session_state.admin_mode:
         total_skor += pilihan
         st.write("")
 
-    if st.button("Dapatkan Hasil & Bantuan", type="primary"):
+    if st.button("DAPATKAN HASIL & BANTUAN", type="primary"):
         st.session_state.submitted = True
         st.session_state.last_score = total_skor
         st.session_state.last_time = ambil_waktu_wib().strftime("%d-%m-%Y %H:%M:%S")
@@ -185,7 +185,7 @@ if not st.session_state.admin_mode:
     # --- 1. BLOK HASIL SKOR (DIPINDAH KE ATAS SINI) ---
     if st.session_state.submitted:
         st.write("---")
-        st.markdown(f"### **Hasil Skor Anda: {st.session_state.last_score} / 30**")
+        st.markdown(f"#### **Hasil Skor Anda: {st.session_state.last_score} / 30**")
         if st.session_state.last_score >= 20:
             st.error(f"⚠️ RISIKO TINGGI TERDETEKSI. Anda tidak sendirian. Mohon segera cari bantuan.")
         elif st.session_state.last_score >= 10:
