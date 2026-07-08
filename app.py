@@ -114,11 +114,10 @@ def generate_pdf_report(logs):
     buffer.seek(0)
     return buffer
 
-# --- PANEL UTAMA INTERFAS PENGGUNA ---
+# --- PANEL UTAMA INTERFASE PENGGUNA ---
 if not st.session_state.admin_mode:
     loc_data = streamlit_geolocation()
     
-    # Header Utama Aplikasi
     col_logo, col_title = st.columns([1, 5])
     with col_logo:
         if os.path.exists("logo_msj.png"):
@@ -140,7 +139,7 @@ if not st.session_state.admin_mode:
     
     pertanyaan = [
         "1. Minat melakukan sesuatu menurun", "2. Merasa sedih, murung, atau putus asa",
-        "3. Sulit tidur atau tidur terlalu banyak", "4. Merasa lelah atau tidak bertenaga",
+        "3. Sulit tidur atau tidur terlalu banyak", "4. Merasa lalah atau tidak bertenaga",
         "5. Nafsu makan menurun atau berlebihan", "6. Merasa gagal atau mengecewakan diri/keluarga",
         "7. Sulit konsentrasi pada sesuatu", "8. Bergerak/berbicara sangat lambat atau gelisah",
         "9. Berpikir bahwa lebih baik mati atau menyakiti diri", "10. Apakah Anda punya rencana spesifik untuk bunuh diri?"
@@ -272,34 +271,60 @@ else:
         st.session_state.logo_clicks = 0
         st.rerun()
 
-# --- FOOTER DAN BACKDOOR KETUKAN LOGO ---
+# --- FOOTER DI-TENGAHKAN & LOGO BACKDOOR ---
 st.write("---")
-col_f1, col_f2 = st.columns([1, 10])
+col_c1, col_c2, col_c3 = st.columns([3, 8, 3])
 
-with col_f1:
-    # Trigger Tersembunyi: Tombol logo transparan tanpa border untuk mendeteksi 3 ketukan
-    if os.path.exists("logo_msj.png"):
-        if st.button(" ", key="backdoor_logo_trigger", help="Verifikasi Otentikasi", use_container_width=True):
-            st.session_state.logo_clicks += 1
-            if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
-                st.rerun()
-        # Mengganti tampilan tombol default agar tampak murni seperti gambar logo biasa
-        st.markdown(
-            f"<div style='margin-top: -45px; pointer-events: none; text-align: center;'>"
-            f"<img src='data:image/png;base64,' style='display:none;'>"
-            f"</div>", 
-            unsafe_allow_html=True
-        )
-        st.image("logo_msj.png", width=45)
-
-with col_f2:
+with col_c2:
     st.markdown("""
-    <div style='font-size: 0.9em; color: #2d3748; line-height: 1.6; font-family: sans-serif; padding-top: 5px;'>
-        <strong>Malang Sehat Jiwa v.1.0.0</strong>, Pengembang: <strong>Ir.M Nasri AW, M.Eng.Sc, M.Kom</strong> | Dosen STIE Indonesia Malang
-    </div>
+    <style>
+    .footer-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 12px;
+    }
+    .footer-text {
+        font-size: 0.95em;
+        color: #2d3748;
+        font-family: sans-serif;
+    }
+    div.stButton > button.logo-btn {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+    </style>
     """, unsafe_allow_html=True)
     
-    # Input kode keamanan admin muncul jika logo di sebelah kiri diketuk 3 kali
+    # Bungkus layout menggunakan container agar sejajar di tengah
+    st.markdown("<div class='footer-container'>", unsafe_allow_html=True)
+    
+    col_img, col_txt = st.columns([1, 8])
+    with col_img:
+        if os.path.exists("logo_msj.png"):
+            # Tombol transparan berlatar belakang logo asli MSJ untuk verifikasi otentikasi klik 3 kali
+            if st.button(" ", key="logo_active_backdoor", help="Verifikasi Otentikasi"):
+                st.session_state.logo_clicks += 1
+                if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
+                    st.rerun()
+            st.markdown("<div style='margin-top: -50px;'>", unsafe_allow_html=True)
+            st.image("logo_msj.png", width=42)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+    with col_txt:
+        st.markdown("""
+        <div class='footer-text' style='padding-top: 5px;'>
+            <strong>Malang Sehat Jiwa v.1.0.0</strong>, Pengembang: <strong>Ir.M Nasri AW, M.Eng.Sc, M.Kom</strong> | Dosen STIE Indonesia Malang
+        </div>
+        """, unsafe_allow_html=True)
+        
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Input kode keamanan internal room muncul tepat di tengah bawah struktur footer
     if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
         st.write("---")
         st.info("🔓 Portal Akses Control Room Ditemukan.")
@@ -309,4 +334,4 @@ with col_f2:
             st.success("Akses Diberikan!")
             st.rerun()
     elif st.session_state.admin_mode:
-        st.markdown("<p style='color:green; font-weight:bold; margin-top:5px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:green; font-weight:bold; text-align:center; margin-top:5px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
