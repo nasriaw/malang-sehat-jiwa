@@ -118,7 +118,6 @@ def generate_pdf_report(logs):
 if not st.session_state.admin_mode:
     loc_data = streamlit_geolocation()
     
-    # Header Aplikasi Utama
     col_logo, col_title = st.columns([1, 6])
     with col_logo:
         if os.path.exists("logo_msj.png"):
@@ -149,7 +148,6 @@ if not st.session_state.admin_mode:
     opsi = {0: "0 - Tidak sama sekali", 1: "1 - Beberapa hari", 2: "2 - >7 hari", 3: "3 - Hampir setiap hari"}
     total_skor = 0
     
-    # Struktur Pertanyaan Menyamping Horizontal
     for idx, q in enumerate(pertanyaan):
         st.markdown(f"**{q}**")
         pilihan = st.radio(
@@ -273,61 +271,64 @@ else:
         st.session_state.logo_clicks = 0
         st.rerun()
 
-# --- FOOTER DITENGAHKAN SECARA RAPI ---
+# --- FOOTER DITENGAHKAN - LOGO ADALAH TOMBOL BACKDOOR (3 KETUKAN) ---
 st.write("---")
-col_f1, col_f2, col_f3 = st.columns([4, 6, 4])
+col_f1, col_f2, col_f3 = st.columns([3, 8, 3])
 
 with col_f2:
+    # Manipulasi CSS untuk menyembunyikan elemen dekoratif tombol bawaan Streamlit
     st.markdown("""
     <style>
-    .footer-wrapper {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        width: 100%;
-    }
-    .footer-text-content {
-        font-size: 0.95em;
-        color: #2d3748;
-        font-family: sans-serif;
-        text-align: left;
-    }
-    /* Sembunyikan border bawaan tombol agar murni menjadi gambar logo klik */
-    div.stButton > button[key^="backdoor_logo_clickable"] {
-        background: transparent !important;
+    div[data-testid="stColumn"] button {
+        background-color: transparent !important;
         border: none !important;
         padding: 0 !important;
         margin: 0 !important;
         box-shadow: none !important;
+        width: auto !important;
+        height: auto !important;
+    }
+    div[data-testid="stColumn"] button:hover {
+        background-color: transparent !important;
+        border: none !important;
+    }
+    div[data-testid="stColumn"] button:active {
+        background-color: transparent !important;
+        border: none !important;
+    }
+    .footer-flex-align {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Menggunakan tata letak sub-kolom agar logo berdampingan dengan teks di posisi tengah
-    sub_c1, sub_c2 = st.columns([1, 7])
+    # Layout horizontal internal untuk logo dan teks
+    sub_c1, sub_c2 = st.columns([1, 11])
     
     with sub_c1:
         if os.path.exists("logo_msj.png"):
-            # Tombol transparan pembungkus logo untuk mendeteksi 3 ketukan masuk admin
-            if st.button(" ", key="backdoor_logo_clickable", help="Ketuk 3x untuk masuk Mode Admin"):
+            # Tombol transparan murni membungkus gambar logo asli
+            if st.button(" ", key="backdoor_logo_clickable"):
                 st.session_state.logo_clicks += 1
                 if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
                     st.rerun()
             
-            # Rendering gambar logo tepat di posisi koordinat tombol
-            st.markdown("<div style='margin-top: -46px;'>", unsafe_allow_html=True)
-            st.image("logo_msj.png", width=46)
+            # Posisi tumpang tindih visual agar logo bertindak sebagai tubuh klik tombol
+            st.markdown("<div style='margin-top: -40px; text-align: center; cursor: pointer;'>", unsafe_allow_html=True)
+            st.image("logo_msj.png", width=42)
             st.markdown("</div>", unsafe_allow_html=True)
             
     with sub_c2:
         st.markdown("""
-        <div class='footer-text-content' style='padding-top: 4px;'>
+        <div style='font-size: 0.95em; color: #2d3748; font-family: sans-serif; padding-top: 5px; text-align: left;'>
             <strong>Malang Sehat Jiwa v.1.0.0</strong>, Pengembang: <strong>Ir.M Nasri AW, M.Eng.Sc, M.Kom</strong> | Dosen STIE Indonesia Malang
         </div>
         """, unsafe_allow_html=True)
 
-    # Input form sandi keamanan pusat pengendali
+    # Menampilkan kolom sandi masuk jika logo diketuk 3 kali
     if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
         st.write("---")
         st.info("🔓 Portal Akses Control Room Ditemukan.")
