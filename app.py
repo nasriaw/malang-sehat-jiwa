@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
---- KONFIGURASI ---
+# --- KONFIGURASI ---
 st.set_page_config(page_title="MALANG SEHAT JIWA", page_icon="💚", layout="centered")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -70,8 +70,9 @@ with tab1:
     options = ["0 - Tidak sama sekali", "1 - Beberapa hari", "2 - >7 hari", "3 - Hampir setiap hari"]
 
     score = 0
+    # Menggunakan key unik string agar lebih aman di Streamlit baru
     for i, q in enumerate(questions):
-        ans = st.radio(q, options, key=i, horizontal=True)
+        ans = st.radio(q, options, key=f"q_{i}", horizontal=True)
         score += int(ans[0])
 
     if st.button("Dapatkan Hasil & Bantuan", type="primary"):
@@ -96,8 +97,19 @@ with tab1:
             - **112** - Layanan Darurat
             - **IGD RS terdekat**
             """)
-            # Kirim alert ke Telegram Relawan
-            asyncio.run(send_telegram_alert(data_log))
+            
+            # PERBAIKAN DI SINI: Cara memanggil fungsi async yang aman di Streamlit
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+            if loop.is_running():
+                loop.create_task(send_telegram_alert(data_log))
+            else:
+                loop.run_until_complete(send_telegram_alert(data_log))
+
             st.success("Tim relawan kami sudah diberitahu secara anonim. Bantuan akan segera diarahkan ke wilayah Anda.")
 
         save_to_gsheet(data_log)
