@@ -294,4 +294,47 @@ with col_f2:
         text-align: left;
     }
     /* Sembunyikan border bawaan tombol agar murni menjadi gambar logo klik */
-    div.stButton > button
+    div.stButton > button[key^="backdoor_logo_clickable"] {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Menggunakan tata letak sub-kolom agar logo berdampingan dengan teks di posisi tengah
+    sub_c1, sub_c2 = st.columns([1, 7])
+    
+    with sub_c1:
+        if os.path.exists("logo_msj.png"):
+            # Tombol transparan pembungkus logo untuk mendeteksi 3 ketukan masuk admin
+            if st.button(" ", key="backdoor_logo_clickable", help="Ketuk 3x untuk masuk Mode Admin"):
+                st.session_state.logo_clicks += 1
+                if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
+                    st.rerun()
+            
+            # Rendering gambar logo tepat di posisi koordinat tombol
+            st.markdown("<div style='margin-top: -46px;'>", unsafe_allow_html=True)
+            st.image("logo_msj.png", width=46)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+    with sub_c2:
+        st.markdown("""
+        <div class='footer-text-content' style='padding-top: 4px;'>
+            <strong>Malang Sehat Jiwa v.1.0.0</strong>, Pengembang: <strong>Ir.M Nasri AW, M.Eng.Sc, M.Kom</strong> | Dosen STIE Indonesia Malang
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Input form sandi keamanan pusat pengendali
+    if st.session_state.logo_clicks >= 3 and not st.session_state.admin_mode:
+        st.write("---")
+        st.info("🔓 Portal Akses Control Room Ditemukan.")
+        password_input = st.text_input("Masukkan Kode Akses Pusat Pengendali:", type="password", key="admin_password_field")
+        if password_input == "sahabat123":
+            st.session_state.admin_mode = True
+            st.success("Akses Diberikan!")
+            st.rerun()
+    elif st.session_state.admin_mode:
+        st.markdown("<p style='color:green; font-weight:bold; text-align:center; margin-top:5px;'>🟢 Mode Admin Sedang Aktif</p>", unsafe_allow_html=True)
