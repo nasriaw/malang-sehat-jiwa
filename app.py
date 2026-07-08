@@ -181,9 +181,32 @@ if not st.session_state.admin_mode:
             "Waktu": st.session_state.last_time, "Kota": kota_input, "Usia": usia_input,
             "Skor": total_skor, "Risiko": risiko, "Lat": user_lat, "Lon": user_lon
         })
-    # --- TAMBAHAN BLOK CATATAN & SUMBER REFERENSI DIBAWAH TOMBOL ---
+    # --- TAMBAHAN BLOK INTERPRETASI, DISCLAIMER, CATATAN & SUMBER ---
+    st.write("---")
+    st.markdown("## 4. INTERPRETASI SKOR & BATASAN")
+    st.markdown("Skor Total: 0 - 30")
+    
+    # Tabel Interpretasi Skor
     st.markdown("""
-    <div style="font-size: 0.85em; color: #4a5568; margin-top: 15px; padding: 10px; background-color: #f7fafc; border-left: 3px solid #2e7d32; border-radius: 4px;">
+    | **Skor Total** | **Kategori** | **Warna** | **Tindak Lanjut Rekomendasi** |
+    | :--- | :--- | :---: | :--- |
+    | **0 - 4** | Minimal / Risiko Rendah | 🟢 Hijau | Edukasi. Jaga pola hidup sehat |
+    | **5 - 9** | Ringan | 🟡 Kuning | Pantau. Cerita ke teman/keluarga |
+    | **10 - 14** | Sedang | 🟡 Kuning | Anjurkan konsultasi ke Puskesmas |
+    | **15 - 19** | Sedang-Berat | 🔴 Merah | Rujuk ke Dokter Umum/Psikolog |
+    | **20 - 30** | Berat / Sangat Berat | 🔴 Merah | **RUJUK DARURAT ke RSJ/IGD** |
+    """)
+    
+    # Box Disclaimer Merah
+    st.markdown("""
+    <div style="background-color: #fff5f5; padding: 12px; border-left: 5px solid #e53e3e; border-radius: 4px; color: #c53030; font-weight: bold; margin-top: 15px; margin-bottom: 15px; font-size: 0.9em;">
+        🚨 DISCLAIMER: INI ADALAH ALAT SKRINING, BUKAN DIAGNOSIS. DIAGNOSIS HANYA BISA DILAKUKAN OLEH DOKTER SPESIALIS KESEHATAN JIWA / PSIKOLOG KLINIS.
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Box Catatan & Sumber Ilmiah Kemenkes
+    st.markdown("""
+    <div style="font-size: 0.85em; color: #4a5568; padding: 12px; background-color: #f7fafc; border-left: 3px solid #2e7d32; border-radius: 4px;">
         <strong>Catatan:</strong> PHQ-9: <em>Patient Health Questionnaire</em>, PHQ-9 digunakan untuk mengukur tingkat keparahan gejala depresi dalam 2 minggu terakhir.<br><br>
         <strong>Sumber:</strong>
         <ul style="margin-top: 5px; padding-left: 20px; list-style-type: square;">
