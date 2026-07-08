@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import datetime
+import pytz  # Pastikan menambahkan 'pytz' di requirements.txt untuk zona waktu WIB
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import asyncio
-from telegram import Bot
+import requests  # Menggunakan requests untuk mengirim Telegram (lebih stabil di Streamlit)
 import os
 from dotenv import load_dotenv
 
@@ -15,20 +15,38 @@ st.set_page_config(page_title="MALANG SEHAT JIWA", page_icon="💚", layout="cen
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-# --- FUNGSI TELEGRAM ---
-async def send_telegram_alert(data):
-    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID: return
-    bot = Bot(token=TELEGRAM_TOKEN)
+# --- FUNGSI TELEGRAM (SINKRONUS & STABIL) ---
+def send_telegram_alert(data):
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID: 
+        return
+    
+    # Format pesan ringkas, jelas, dan informatif untuk relawan
     msg = f"""
-    🚨 ALERT SAHABAT JIWA 🚨
-    Skor Tinggi Terdeteksi: {data['skor']}/30
-    Waktu: {data['waktu']}
-    Kota: {data['kota']}
-    Usia: {data['usia']}
+🚨 *ALERT SAHABAT JIWA* 🚨
 
-    Segera lakukan follow up. Ini bukan data pribadi.
-    """
-    await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
+📌 *Detail Laporan:*
+• *Skor Screening:* {data['skor']} / 30 (RISIKO TINGGI)
+• *Waktu Kejadian:* {data['waktu']} WIB
+• *Lokasi Kejadian:* {data['kota']}
+• *Kategori Usia:* {data['usia']} Tahun
+
+⚠️ _Mohon tim relawan terdekat di wilayah tersebut segera bersiaga untuk follow up (Data Bersifat Anonim)._
+"""
+    
+    # Kirim menggunakan API bot Telegram biasa (POST request)
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": msg,
+        "parse_mode": "Markdown"
+    }
+    
+    try:
+        response = requests.post(url, json=payload, timeout=10)
+        return response.json()
+    except Exception as e:
+        # Menulis log eror ke konsol Streamlit jika gagal kirim
+        print(f"Gagal mengirim bot Telegram: {e}")
 
 # --- FUNGSI GOOGLE SHEET ---
 def save_to_gsheet(data):
@@ -38,7 +56,8 @@ def save_to_gsheet(data):
         client = gspread.authorize(creds)
         sheet = client.open("DB_SahabatJiwa").sheet1
         sheet.append_row(list(data.values()))
-    except: pass # Fail silently biar app tetap jalan
+    except: 
+        pass # Fail silently agar aplikasi user tidak crash jika DB bermasalah
 
 # --- UI APLIKASI ---
 st.title("💚 SAHABAT JIWA v1.0")
@@ -49,7 +68,7 @@ tab1, tab2 = st.tabs(["Mulai Screening", "Info Bantuan"])
 
 with tab1:
     st.header("Check-in 3 Menit")
-    kota = st.text_input("Kota/Kabupaten", "Malang")
+    kota = st.text_input("Kota/Kabupaten Lokasi Anda Saat Ini", "Malang")
     usia = st.slider("Usia", 13, 80, 20)
 
     st.write("**PHQ-9 + Screening Risiko**")
@@ -64,20 +83,22 @@ with tab1:
         "Merasa gagal atau mengecewakan diri/keluarga",
         "Sulit konsentrasi pada sesuatu",
         "Bergerak/berbicara sangat lambat atau gelisah",
-        "Berpikir bahwa lebih baik mati atau menyakiti diri", # Q9 Kunci
-        "Apakah Anda punya rencana spesifik untuk bunuh diri?" # Q10 Tambahan
+        "Berpikir bahwa lebih baik mati atau menyakiti diri", 
+        "Apakah Anda punya rencana spesifik untuk bunuh diri?" 
     ]
     options = ["0 - Tidak sama sekali", "1 - Beberapa hari", "2 - >7 hari", "3 - Hampir setiap hari"]
 
     score = 0
-    # Menggunakan key unik string agar lebih aman di Streamlit baru
     for i, q in enumerate(questions):
         ans = st.radio(q, options, key=f"q_{i}", horizontal=True)
         score += int(ans[0])
 
     if st.button("Dapatkan Hasil & Bantuan", type="primary"):
-        waktu = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        data_log = {"waktu": waktu, "kota": kota, "usia": usia, "skor": score}
+        # Mengatur Waktu ke Waktu Indonesia Barat (WIB) agar akurat di server mana pun
+        tz_wib = pytz.timezone('Asia/Jakarta')
+        waktu_sekarang = datetime.datetime.now(tz_wib).strftime("%d-%m-%Y %H:%M:%S")
+        
+        data_log = {"waktu": waktu_sekarang, "kota": kota, "usia": usia, "skor": score}
 
         st.divider()
         st.subheader(f"Hasil Skor Anda: {score} / 30")
@@ -98,18 +119,8 @@ with tab1:
             - **IGD RS terdekat**
             """)
             
-            # PERBAIKAN DI SINI: Cara memanggil fungsi async yang aman di Streamlit
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                
-            if loop.is_running():
-                loop.create_task(send_telegram_alert(data_log))
-            else:
-                loop.run_until_complete(send_telegram_alert(data_log))
-
+            # Memanggil fungsi kirim telegram secara langsung tanpa asyncio.run()
+            send_telegram_alert(data_log)
             st.success("Tim relawan kami sudah diberitahu secara anonim. Bantuan akan segera diarahkan ke wilayah Anda.")
 
         save_to_gsheet(data_log)
