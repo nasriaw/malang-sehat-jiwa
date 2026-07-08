@@ -1,7 +1,7 @@
 streamlit
 pandas
-gspread
-oauth2client
+folium
+streamlit-folium
+streamlit-autorefresh
 requests
-pytz
-python-dotenv
+reportlab
