@@ -31,8 +31,8 @@ if 'relawan_data' not in st.session_state:
     except: 
         st.session_state.relawan_data = pd.DataFrame([
             {"Nama": "Relawan Pusat Malang", "No_Handphone": "", "Latitude": -7.970222, "Longitude": 112.607498, "Status": "Aktif"},
-            {"Nama": "Relawan Sukun", "No_Handphone": "08123456789", "Latitude": -7.9922, "Longitude": 112.6160, "Status": "Aktif"},
-            {"Nama": "Relawan Klojen", "No_Handphone": "08134567890", "Latitude": -7.9778, "Longitude": 112.6261, "Status": "Aktif"}
+            {"Nama": "Relawan Sukun", "No_Handphone": "", "Latitude": -7.9922, "Longitude": 112.6160, "Status": "Aktif"},
+            {"Nama": "Relawan Klojen", "No_Handphone": "", "Latitude": -7.9778, "Longitude": 112.6261, "Status": "Aktif"}
         ])
 
 if 'screening_logs' not in st.session_state: st.session_state.screening_logs = []
