@@ -1,26 +1,29 @@
 import streamlit as st
 import pandas as pd
 import datetime
-import pytz  # Pastikan menambahkan 'pytz' di requirements.txt untuk zona waktu WIB
+import pytz  
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import requests  # Menggunakan requests untuk mengirim Telegram (lebih stabil di Streamlit)
+import requests  
 import os
 from dotenv import load_dotenv
 
+# Memuat variabel lingkungan (.env) untuk pengujian lokal
 load_dotenv()
 
-# --- KONFIGURASI ---
+# --- KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="MALANG SEHAT JIWA", page_icon="💚", layout="centered")
+
+# Mengambil kredensial Telegram dari Secrets (Streamlit Cloud) atau .env (Lokal)
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-# --- FUNGSI TELEGRAM (SINKRONUS & STABIL) ---
+# --- FUNGSI TELEGRAM (SINKRONUS & AMAN) ---
 def send_telegram_alert(data):
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID: 
         return
     
-    # Format pesan ringkas, jelas, dan informatif untuk relawan
+    # Format pesan yang dikirimkan ke grup Telegram Relawan
     msg = f"""
 🚨 *ALERT SAHABAT JIWA* 🚨
 
@@ -30,10 +33,9 @@ def send_telegram_alert(data):
 • *Lokasi Kejadian:* {data['kota']}
 • *Kategori Usia:* {data['usia']} Tahun
 
-⚠️ _Mohon tim relawan terdekat di wilayah tersebut segera bersiaga untuk follow up (Data Bersifat Anonim)._
+⚠️ _Mohon tim relawan terdekat di wilayah tersebut segera bersiaga untuk melakukan follow up._
 """
     
-    # Kirim menggunakan API bot Telegram biasa (POST request)
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
@@ -45,7 +47,6 @@ def send_telegram_alert(data):
         response = requests.post(url, json=payload, timeout=10)
         return response.json()
     except Exception as e:
-        # Menulis log eror ke konsol Streamlit jika gagal kirim
         print(f"Gagal mengirim bot Telegram: {e}")
 
 # --- FUNGSI GOOGLE SHEET ---
@@ -56,12 +57,12 @@ def save_to_gsheet(data):
         client = gspread.authorize(creds)
         sheet = client.open("DB_SahabatJiwa").sheet1
         sheet.append_row(list(data.values()))
-    except: 
-        pass # Fail silently agar aplikasi user tidak crash jika DB bermasalah
+    except Exception as e: 
+        print(f"Gagal menyimpan ke Google Sheet: {e}")
 
-# --- UI APLIKASI ---
+# --- INTERFACE UTAMA APLIKASI ---
 st.title("💚 SAHABAT JIWA v1.0")
-st.caption("Screening Kesehatan Jiwa Berbasis Web | Untuk Deteksi Dini")
+st.caption("Screening Kesehatan Jiwa Berbasis Web | Antarmuka Deteksi Dini")
 st.warning("DARURAT? Hubungi segera: 119 ext 8 | 112 | 0811-999-5656")
 
 tab1, tab2 = st.tabs(["Mulai Screening", "Info Bantuan"])
@@ -72,7 +73,7 @@ with tab1:
     usia = st.slider("Usia", 13, 80, 20)
 
     st.write("**PHQ-9 + Screening Risiko**")
-    st.write("Seberapa sering dalam 2 minggu terakhir?")
+    st.write("Seberapa sering dalam 2 minggu terakhir Anda merasakan hal-hal berikut?")
 
     questions = [
         "Minat melakukan sesuatu menurun",
@@ -93,12 +94,13 @@ with tab1:
         ans = st.radio(q, options, key=f"q_{i}", horizontal=True)
         score += int(ans[0])
 
+    # AKSI TOMBOL UTAMA
     if st.button("Dapatkan Hasil & Bantuan", type="primary"):
-        # 1. Mengatur Waktu ke Waktu Indonesia Barat (WIB)
+        # Sinkronisasi zona waktu ke Waktu Indonesia Barat
         tz_wib = pytz.timezone('Asia/Jakarta')
         waktu_sekarang = datetime.datetime.now(tz_wib).strftime("%d-%m-%Y %H:%M:%S")
         
-        # 2. Menyusun data log kuesioner
+        # Penyusunan paket data log
         data_log = {"waktu": waktu_sekarang, "kota": kota, "usia": usia, "skor": score}
 
         st.divider()
@@ -120,19 +122,17 @@ with tab1:
             - **IGD RS terdekat**
             """)
             
-            # 3. Memicu fungsi kirim Telegram Sinkronus
+            # Pemicu integrasi bot Telegram
             send_telegram_alert(data_log)
-            
-            # 4. Menampilkan teks sukses dengan variabel waktu yang benar
             st.success(f"Tim relawan kami di wilayah **{kota}** sudah diberitahu secara anonim pada jam **{waktu_sekarang} WIB**. Bantuan akan segera diarahkan ke wilayah Anda.")
 
-        # 5. Simpan ke Google Sheet
+        # Penyimpanan data ke database Google Sheets
         save_to_gsheet(data_log)
-        st.caption("Data Anda disimpan anonim untuk membantu pemetaan kesehatan jiwa di Indonesia.")
+        st.caption("Data Anda disimpan secara anonim untuk membantu pemetaan kesehatan jiwa di Indonesia.")
 
 with tab2:
     st.header("Anda Tidak Sendirian")
-    st.write("1. **Puskesmas**: Semua Puskesmas punya layanan kesehatan jiwa dasar, gratis pakai BPJS")
-    st.write("2. **RSJ**: Rujukan untuk penanganan lebih lanjut")
-    st.write("3. **Komunitas**: Into The Light, Sahabat 24")
-    st.write("Ingat: Mencari bantuan adalah tanda kuat, bukan lemah.")
+    st.write("1. **Puskesmas**: Semua Puskesmas memiliki layanan kesehatan jiwa dasar, gratis menggunakan faskes BPJS.")
+    st.write("2. **RSJ**: Rujukan utama medis untuk penanganan psikologis lebih intensif.")
+    st.write("3. **Komunitas**: Komunitas swadaya seperti Into The Light, Sahabat 24.")
+    st.write("Ingat: Mencari bantuan medis/psikologis adalah tanda kekuatan diri, bukan kelemahan.")
