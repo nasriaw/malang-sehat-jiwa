@@ -30,7 +30,9 @@ if 'relawan_data' not in st.session_state:
         st.session_state.relawan_data = pd.read_csv("data/relawan_jiwa.csv")
     except: 
         st.session_state.relawan_data = pd.DataFrame([
-            {"Nama": "Relawan Pusat Malang", "No_Handphone": "08119995656", "Latitude": -7.970222, "Longitude": 112.607498, "Status": "Aktif"}
+            {"Nama": "Relawan Pusat Malang", "No_Handphone": "08119995656", "Latitude": -7.970222, "Longitude": 112.607498, "Status": "Aktif"},
+            {"Nama": "Relawan Sukun", "No_Handphone": "08123456789", "Latitude": -7.9922, "Longitude": 112.6160, "Status": "Aktif"},
+            {"Nama": "Relawan Klojen", "No_Handphone": "08134567890", "Latitude": -7.9778, "Longitude": 112.6261, "Status": "Aktif"}
         ])
 
 if 'screening_logs' not in st.session_state: st.session_state.screening_logs = []
@@ -47,18 +49,9 @@ def ambil_waktu_wib():
     waktu_wib = waktu_utc + datetime.timedelta(hours=7)
     return waktu_wib
 
-def hitung_jarak(lat1, lon1, lat2, lon2):
-    R = 6371.0
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    return R * c
-
 def send_telegram_alert(kota, skor, tingkat_risiko, lat, lon):
     timestamp = ambil_waktu_wib().strftime("%d-%m-%Y %H:%M:%S")
     
-    # Generate link koordinat peta lokasi pelapor
     if lat and lon:
         maps_url = f"https://www.google.com/maps?q={lat},{lon}"
         lokasi_str = f"{lat}, {lon}\n🔗 [Buka Peta Lokasi Pelapor]({maps_url})"
@@ -86,15 +79,27 @@ def generate_pdf_report(logs):
     doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
     story = []
     styles = getSampleStyleSheet()
+    
+    # Custom Style
     title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=16, textColor=colors.HexColor('#2e7d32'), spaceAfter=12)
+    normal_style = styles['Normal']
+    
     story.append(Paragraph("LAPORAN DATA AGREGAT SKRENING - SAHABAT JIWA v1.0", title_style))
     waktu_cetak = ambil_waktu_wib().strftime("%Y-%m-%d %H:%M:%S")
-    story.append(Paragraph(f"Dicetak pada: {waktu_cetak} WIB", styles['Normal']))
+    story.append(Paragraph(f"Dicetak pada: {waktu_cetak} WIB (Data bersifat Anonim)", normal_style))
     story.append(Spacer(1, 15))
     
     data = [["Waktu", "Kota/Kabupaten", "Usia", "Skor", "Tingkat Risiko", "Latitude", "Longitude"]]
     for log in logs:
-        data.append([log['Waktu'], log['Kota'], str(log['Usia']), f"{log['Skor']}/30", log['Risiko'], str(log.get('Lat','-')), str(log.get('Lon','-'))])
+        data.append([
+            str(log.get('Waktu', '-')), 
+            str(log.get('Kota', '-')), 
+            str(log.get('Usia', '-')), 
+            f"{log.get('Skor', 0)}/30", 
+            str(log.get('Risiko', '-')), 
+            str(log.get('Lat', '-')) if log.get('Lat') is not None else '-', 
+            str(log.get('Lon', '-')) if log.get('Lon') is not None else '-'
+        ])
         
     t = Table(data, colWidths=[110, 90, 40, 50, 110, 70, 70])
     t.setStyle(TableStyle([
@@ -143,7 +148,6 @@ with st.sidebar:
 
 # --- PANEL UTAMA PENGGUNA ---
 if not st.session_state.admin_mode:
-    # Meminta izin lokasi GPS pelapor
     loc_data = streamlit_geolocation()
     
     st.markdown("<h1 style='color: #2e7d32; margin-bottom:0px;'>💚 SAHABAT JIWA v1.0</h1>", unsafe_allow_html=True)
@@ -186,7 +190,6 @@ if not st.session_state.admin_mode:
         elif total_skor >= 10: risiko = "RISIKO SEDANG TERDETEKSI"
         else: risiko = "RISIKO RENDAH / NORMAL"
         
-        # Kirim notifikasi bot lengkap dengan data koordinat pelapor
         if total_skor >= 10:
             send_telegram_alert(kota_input, total_skor, risiko, user_lat, user_lon)
             
@@ -230,29 +233,51 @@ else:
                 if nama and hp:
                     new_rel = pd.DataFrame([{"Nama": nama, "No_Handphone": hp, "Latitude": lat_rel, "Longitude": lon_rel, "Status": "Aktif"}])
                     st.session_state.relawan_data = pd.concat([st.session_state.relawan_data, new_rel], ignore_index=True)
-                    try: st.session_state.relawan_data.to_csv("data/relawan_jiwa.csv", index=False)
+                    try: 
+                        os.makedirs("data", exist_ok=True)
+                        st.session_state.relawan_data.to_csv("data/relawan_jiwa.csv", index=False)
                     except: pass
                     st.success("Data relawan diperbarui!")
                     st.rerun()
         st.data_editor(st.session_state.relawan_data, use_container_width=True)
         
     elif admin_nav == "🗺️ Sebaran Geografis":
-        st.subheader("Peta Pemetaan Pelapor & Lokasi Relawan")
+        st.subheader("Peta Pemetaan Pelapor & Lokasi Relawan Aktif")
         m_admin = folium.Map(location=[BASE_LAT, BASE_LON], zoom_start=13)
         
-        # Plot data Relawan
+        # Plot data Relawan (Warna Hijau)
         for _, r in st.session_state.relawan_data.iterrows():
-            folium.Marker([r["Latitude"], r["Longitude"]], popup=f"Relawan: {r['Nama']}", icon=folium.Icon(color='green', icon='user')).add_to(m_admin)
+            if r["Status"] == "Aktif":
+                folium.Marker(
+                    [r["Latitude"], r["Longitude"]], 
+                    popup=f"🟢 Relawan: {r['Nama']} ({r['No_Handphone']})", 
+                    icon=folium.Icon(color='green', icon='user', prefix='fa')
+                ).add_to(m_admin)
             
-        # Plot data Pelapor dari log
+        # Plot data Pelapor dari Log Screening (Warna Merah/Oranye)
         for log in st.session_state.screening_logs:
-            if log.get("Lat") and log.get("Lon"):
+            if log.get("Lat") is not None and log.get("Lon") is not None:
                 color_m = 'red' if log['Skor'] >= 20 else 'orange'
-                folium.Marker([log["Lat"], log["Lon"]], popup=f"Pelapor ({log['Risiko']})", icon=folium.Icon(color=color_m, icon='exclamation-sign')).add_to(m_admin)
+                folium.Marker(
+                    [log["Lat"], log["Lon"]], 
+                    popup=f"⚠️ Pelapor [{log['Risiko']}] - Skor: {log['Skor']}/30", 
+                    icon=folium.Icon(color=color_m, icon='exclamation-sign')
+                ).add_to(m_admin)
+                
         folium_static(m_admin)
         
     elif admin_nav == "📄 Export Dokumen":
         st.subheader("Unduh Dokumen Berkas")
         if st.session_state.screening_logs:
-            pdf_file = generate_pdf_report(st.session_state.screening_logs)
-            st.download_button("📥 Unduh Berkas Rekapitulasi PDF", data=pdf_file, file_name="Rekap_Sahabat_Jiwa.pdf", mime="application/pdf")
+            try:
+                pdf_file = generate_pdf_report(st.session_state.screening_logs)
+                st.download_button(
+                    label="📥 Unduh Berkas Rekapitulasi PDF", 
+                    data=pdf_file, 
+                    file_name="Rekap_Sahabat_Jiwa.pdf", 
+                    mime="application/pdf"
+                )
+            except Exception as e:
+                st.error(f"Gagal memproses ekspor PDF: {str(e)}")
+        else:
+            st.warning("Tidak ada log riwayat skrening untuk dicetak.")
